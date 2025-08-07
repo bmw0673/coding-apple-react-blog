@@ -4,54 +4,114 @@ import './App.css';
 import { useState, useSyncExternalStore } from 'react';
 
 function App() {
+  
+  const [write, setWrite] = useState([
+    {
+      title : '남자 코트 추천',
+      detail : '코트 추천합니당',
+      date : '20250806',
+      like : 0
+    },
+    {
+      title : '강남 우동 맛집',
+      detail : '맛집 추천합니당',
+      date : '20250806',
+      like : 0
+    },
+    {
+      title : '파이썬 독학',
+      detail : '독학 추천합니당',
+      date : '20250806',
+      like : 0
+    }
+  ]);
 
-  let [title, setTitle] = useState(['남자 코트 추천' , '강남 우동 맛집' , '파이썬 독학']);
-  let [like, setLike] = useState(0);
-  let [modal, setModal] = useState('hide')
+  const [modal, setModal] = useState(true)
+  const [curIndex, setCurIndex] = useState(-1);
+  const [reg, setReg] = useState({});
+  function upLike(index){
+    let copy = [...write];
+    copy[index].like += 1;
+    setWrite(copy);
+  }
+
+  function deleteWrite(index){
+    let copy = [...write];
+    copy.splice(index, 1);
+    setWrite(copy);
+  }
+
+  function saveWrite(reg){
+    const now = new Date();
+
+    let copyWrite = [...write];
+    let copyReg = {...reg};
+    console.log(copyWrite);
+    copyReg.date = now.getFullYear()+String(now.getMonth() + 1).padStart(2, '0')+String(now.getDate()).padStart(2, '0');
+    copyReg.like = 0;
+    copyWrite.unshift(copyReg);
+    setWrite(copyWrite);
+  }
+
+  function showModal(index){
+    index === curIndex ? setModal(!modal) : setModal(false);
+    setCurIndex(index);
+  }
+
+  function editReg(gubun, text){
+    let copy = {...reg};
+    copy[gubun] = text;
+    setReg(copy);
+  }
 
   return (
     <div className="App">
       <div className='black-nav'>
         <h4 >ReactBlog</h4>
       </div>
-      <div>
-        <button onClick={()=>{
-          let copy = [...title];
-          copy.sort();
-          setTitle(copy);
-        }}>정렬</button>
-        <button onClick={()=>{
-          let copy = [...title];
-          copy[0] = '여자 코트 추천';
-          setTitle(copy);
-        }}>글제목변경</button>
-      </div>
-      <div className='list' onClick={()=>{setModal('')}}>
-        <h4>{ title[0] } <span onClick={()=>{setLike(like+1)} }>👍</span> { like } </h4>
-        <p>2월 17일 발행</p>
-      </div>
-      <div className='list'>
-        <h4>{ title[1] }</h4>
-        <p>2월 17일 발행</p>
-      </div>
-      <div className='list'>
-        <h4>{ title[2] }</h4>
-        <p>2월 17일 발행</p>
-      </div>
 
-      {modal == 'hide' ? '' : <Modal />}
+      {
+        write.map(function(e, index){
+          return (
+            <div key={index} className='list'>
+              <h4 onDoubleClick={()=>{showModal(index)}} style={{display : 'flex'}}>
+                { e.title } 
+                <div onClick={(e)=>{e.stopPropagation(); upLike(index)} }> 👍</div> 
+                { e.like } 
+              </h4>
+             <p>{e.date.slice(0,4)}년 {e.date.slice(4,6)}월 {e.date.slice(6,8)}일</p>
+              <button onClick={()=>{deleteWrite(index)}}>삭제</button>
+            </div>
+          )
+        })
+      }
+
+      {modal? null : <Modal write={write} curIndex={curIndex} />}
+
+      <div>
+        <div>
+          제목 : <input type='text' onChange={(e)=>{ editReg('title', e.target.value)}} />
+        </div>
+        <div>
+          내용 : <input type='text' onChange={(e)=>{ editReg('detail', e.target.value)}} />
+        </div>
+        <button onClick={()=>{saveWrite(reg)}}>등록</button>
+      </div>
 
     </div>
   );
 }
 
-function Modal(){
+function Modal(props){
+  const curWrite = props.write[props.curIndex];
+  console.log(curWrite);
+
   return (
       <div className='modal'>
-        <h4>제목</h4>
-        <p>제목</p>
-        <p>상세내용</p>
-        <p onClick={()=>{setModal('hide')}}>닫기</p>
+        <h4>{curWrite.title}</h4>
+        <p>{curWrite.detail}</p>
+        <p>{`${curWrite.date.slice(0,4)}년 ${curWrite.date.slice(4,6)}월 ${curWrite.date.slice(6,8)}일`}</p>
+        {/* <button onClick={()=>{let copy=[...props.title]; copy[props.curIndex]='여자코트추천'; props.setTitle(copy)}}>제목변경</button> */}
       </div>
   )
 }
